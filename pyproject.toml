@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "top-secret"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+flask = "^3.0.0"
+requests = "^2.31.0"
+prompt-toolkit = "^3.0.43"
+pexpect = "^4.9.0"
+openai = "^1.6.1"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.scripts]
+top-secret-cli = "top_secret.cli:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
