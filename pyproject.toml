@@ -17,6 +17,11 @@ python-dotenv = "^1.0.0"
 [tool.poetry.scripts]
 top-secret-cli = "top_secret.cli:main"
 
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.0"
+autopep8 = "^2.0.4"
+black = "^23.12.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
