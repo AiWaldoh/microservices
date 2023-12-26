@@ -10,6 +10,8 @@ services:
   logging_service:
     build: ./top_secret/services/logging_service
     network_mode: host
+    volumes:
+      - "/home/aiwaldoh/Development/python/projects/top-secret/logs:/app/logs"
 
   command_executor_service:
     build: ./top_secret/services/command_executor_service

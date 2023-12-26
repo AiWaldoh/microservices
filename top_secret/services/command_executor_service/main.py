@@ -10,11 +10,31 @@ app = FastAPI()
 
 
 class ProcessManager:
+    """
+    Manages the lifecycle and operations of command executions.
+
+    Attributes:
+        processes (dict): A dictionary mapping process IDs to CommandExecutor instances.
+    """
+
     def __init__(self):
+        """
+        Initializes the ProcessManager with an empty dictionary for tracking processes.
+        """
         self.processes = {}  # Maps process_id to CommandExecutor instances.
 
     def create_process(self, command, timeout=None):
-        """Create a new CommandExecutor instance and return a process_id."""
+        """
+        Creates a new CommandExecutor instance and returns a unique process ID.
+
+        Args:
+            command (str): The command to be executed.
+            timeout (int, optional): The maximum time in seconds for the command to run.
+
+        Returns:
+            str: A unique process ID for the created command execution.
+        """
+
         process_id = str(uuid4())
         executor = CommandExecutor(command, timeout)
         self.processes[process_id] = executor
@@ -22,14 +42,31 @@ class ProcessManager:
         return process_id
 
     def terminate_process(self, process_id):
-        """Terminate the process associated with the process_id."""
+        """
+        Terminates the process associated with the given process ID.
+
+        Args:
+            process_id (str): The ID of the process to terminate.
+
+        Returns:
+            bool: True if the process was successfully terminated, False otherwise.
+        """
         if process_id in self.processes:
             self.processes[process_id].interrupt()
             return True
         return False
 
     def get_process_status(self, process_id):
-        """Get the status of the process associated with the process_id."""
+        """
+        Retrieves the status of the process associated with the given process ID.
+
+        Args:
+            process_id (str): The ID of the process whose status is being queried.
+
+        Returns:
+            dict or None: A dictionary containing 'running' status and 'output' of the
+            process, or None if process ID is not found.
+        """
         if process_id in self.processes:
             return {
                 "running": self.processes[process_id].is_running(),
@@ -42,7 +79,21 @@ class ProcessManager:
 
 
 class CommandExecutor:
+    """
+    Executes and manages a shell command process.
+
+    Attributes:
+        command (str): The command to be executed.
+        timeout (int, optional): The maximum time in seconds for the command to run.
+        process (pexpect.spawn or None): The pexpect process instance.
+        output (str): Accumulated output of the command.
+        working_dir (str): The working directory for the command execution.
+    """
+
     def __init__(self, command, timeout=None):
+        """
+        Initializes the CommandExecutor with the given command and optional timeout.
+        """
         self.command = command
         self.timeout = timeout
         self.process = None  # pexpect.spawn instance.
@@ -50,14 +101,20 @@ class CommandExecutor:
         self.working_dir = "/app/data"  # Set the working directory to /app/data
 
     def execute(self):
-        """Execute the command with optional timeout using pexpect."""
+        """
+        Executes the command using pexpect with the specified timeout and working
+        directory.
+        """
         self.process = pexpect.spawn(
             self.command, timeout=self.timeout, cwd=self.working_dir
         )
         self._capture_output()
 
     def _capture_output(self):
-        """Read the output of the command and store it."""
+        """
+        Internal method to read and store the output of the command in a separate
+        thread.
+        """
 
         def read_output():
             while True:
@@ -76,17 +133,29 @@ class CommandExecutor:
         output_thread.start()
 
     def interrupt(self):
-        """Send an interrupt signal (Ctrl+C) to the running process."""
+        """
+        Sends an interrupt signal to the running process and terminates it.
+        """
         if self.process is not None:
             self.process.sendcontrol("c")
             self.process.terminate(force=True)
 
     def is_running(self):
-        """Check if the process is still running."""
+        """
+        Checks if the process is still running.
+
+        Returns:
+            bool: True if the process is alive, False otherwise.
+        """
         return self.process is not None and self.process.isalive()
 
     def get_output(self):
-        """Retrieve the output of the command."""
+        """
+        Retrieves the current output of the command.
+
+        Returns:
+            str: The output of the command up to the current point.
+        """
         if self.process is not None:
             return self.process.before.decode("utf-8")
         return ""
@@ -96,19 +165,57 @@ class CommandExecutor:
 
 
 class CommandController:
+    """
+    Provides an interface for managing command executions using a ProcessManager.
+
+    Attributes:
+        process_manager (ProcessManager): The ProcessManager instance used for command
+        execution and management.
+    """
+
     def __init__(self, process_manager):
+        """
+        Initializes the CommandController with a given ProcessManager.
+        """
         self.process_manager = process_manager
 
     def start_command(self, command, timeout=None):
-        """Start a new command and return a process_id."""
+        """
+        Starts a new command execution and returns a process ID.
+
+        Args:
+            command (str): The command to be executed.
+            timeout (int, optional): The maximum time in seconds for the command to run.
+
+        Returns:
+            str: A unique process ID for the started command execution.
+        """
         return self.process_manager.create_process(command, timeout)
 
     def stop_command(self, process_id):
-        """Stop the command associated with the given process_id."""
+        """
+        Stops the command execution associated with the given process ID.
+
+        Args:
+            process_id (str): The ID of the process to stop.
+
+        Returns:
+            bool: True if the command was successfully stopped, False otherwise.
+        """
         return self.process_manager.terminate_process(process_id)
 
     def get_status(self, process_id):
-        """Return the status of the command associated with the process_id."""
+        """
+        Returns the status of the command execution associated with the
+          given process ID.
+
+        Args:
+            process_id (str): The ID of the process whose status is being queried.
+
+        Returns:
+            dict or None: A dictionary containing the status and output of the command,
+              or None if the process ID is invalid.
+        """
         status = self.process_manager.get_process_status(process_id)
         if status:
             status["output"] = self.process_manager.processes[process_id].output
@@ -132,6 +239,20 @@ command_controller = CommandController(process_manager)
 
 @app.post("/commands/start")
 async def start_command(command_request: StartCommandRequest):
+    """
+    Endpoint to start a new command execution.
+
+    Args:
+        command_request (StartCommandRequest): The request body containing the command
+          and optional timeout.
+
+    Returns:
+        dict: A dictionary containing the 'process_id' of the started command.
+
+    Raises:
+        HTTPException: 400 Bad Request if the command is missing.
+    """
+
     if command_request.command:
         process_id = command_controller.start_command(
             command_request.command, command_request.timeout
@@ -145,6 +266,19 @@ async def start_command(command_request: StartCommandRequest):
 
 @app.post("/commands/stop")
 async def stop_command(stop_request: StopCommandRequest):
+    """
+    Endpoint to stop an ongoing command execution.
+
+    Args:
+        stop_request (StopCommandRequest): The request body containing the
+          'process_id' of the command to stop.
+
+    Returns:
+        dict: A dictionary indicating whether the command was successfully stopped.
+
+    Raises:
+        HTTPException: 400 Bad Request if the 'process_id' is missing.
+    """
     if stop_request.process_id:
         success = command_controller.stop_command(stop_request.process_id)
         return {"stopped": success}
@@ -156,6 +290,19 @@ async def stop_command(stop_request: StopCommandRequest):
 
 @app.get("/commands/status")
 async def get_status(process_id: str):
+    """
+    Endpoint to get the status of an ongoing or completed command execution.
+
+    Args:
+        process_id (str): The 'process_id' of the command whose status is being queried.
+
+    Returns:
+        dict: A dictionary containing the status and output of the command.
+
+    Raises:
+        HTTPException: 400 Bad Request if the 'process_id' is missing.
+        HTTPException: 404 Not Found if the 'process_id' is invalid.
+    """
     if process_id:
         status = command_controller.get_status(process_id)
         if status is not None:
@@ -168,11 +315,3 @@ async def get_status(process_id: str):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Missing process_id"
         )
-
-
-# The CommandAPI class and setup_routes method are no longer needed
-# since FastAPI handles route setup directly with decorators
-
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=5000)
