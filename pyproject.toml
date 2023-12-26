@@ -2,7 +2,7 @@
 name = "top-secret"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["AiWaldoh <aiwaldoh@gptcoder.pro>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -13,6 +13,10 @@ prompt-toolkit = "^3.0.43"
 pexpect = "^4.9.0"
 openai = "^1.6.1"
 python-dotenv = "^1.0.0"
+httpx = "^0.26.0"
+fastapi = "^0.106.0"
+uvicorn = "^0.25.0"
+pytest-asyncio = "^0.23.2"
 
 [tool.poetry.scripts]
 top-secret-cli = "top_secret.cli:main"
@@ -21,6 +25,11 @@ top-secret-cli = "top_secret.cli:main"
 pre-commit = "^3.6.0"
 autopep8 = "^2.0.4"
 black = "^23.12.1"
+pytest = "^7.4.3"
+pytest-asyncio = "^0.23.2"
+httpx = "^0.26.0"
+respx = "^0.20.2"
+pytest-cov = "^4.1.0"
 
 [build-system]
 requires = ["poetry-core"]

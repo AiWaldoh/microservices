@@ -1,9 +1,10 @@
 import pexpect
-from flask import Flask, jsonify, request
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel
 from uuid import uuid4
 import threading
 
-app = Flask(__name__)
+app = FastAPI()
 
 # ProcessManager: Manages the lifecycle of command executions.
 
@@ -111,54 +112,64 @@ class CommandController:
         return status
 
 
-# CommandAPI: Flask routes for the Command Execution Service.
+# Define the request models for FastAPI
+class StartCommandRequest(BaseModel):
+    command: str
+    timeout: int = None
 
 
-class CommandAPI:
-    def __init__(self, command_controller):
-        self.command_controller = command_controller
-
-    def setup_routes(self):
-        """Setup Flask routes for the Command Execution Service."""
-
-        @app.route("/commands/start", methods=["POST"])
-        def start_command():
-            data = request.json
-            command = data.get("command")
-            timeout = data.get("timeout")
-            if command:
-                process_id = self.command_controller.start_command(command, timeout)
-                return jsonify({"process_id": process_id}), 200
-            else:
-                return jsonify({"error": "Missing command"}), 400
-
-        @app.route("/commands/stop", methods=["POST"])
-        def stop_command():
-            data = request.json
-            process_id = data.get("process_id")
-            if process_id:
-                success = self.command_controller.stop_command(process_id)
-                return jsonify({"stopped": success}), 200
-            else:
-                return jsonify({"error": "Missing process_id"}), 400
-
-        @app.route("/commands/status", methods=["GET"])
-        def get_status():
-            process_id = request.args.get("process_id")
-            if process_id:
-                status = self.command_controller.get_status(process_id)
-                if status is not None:
-                    return jsonify(status), 200
-                else:
-                    return jsonify({"error": "Invalid process_id"}), 404
-            else:
-                return jsonify({"error": "Missing process_id"}), 400
+class StopCommandRequest(BaseModel):
+    process_id: str
 
 
+# Initialize your controllers
 process_manager = ProcessManager()
 command_controller = CommandController(process_manager)
-command_api = CommandAPI(command_controller)
-command_api.setup_routes()
 
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+
+@app.post("/commands/start")
+async def start_command(command_request: StartCommandRequest):
+    if command_request.command:
+        process_id = command_controller.start_command(
+            command_request.command, command_request.timeout
+        )
+        return {"process_id": process_id}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Missing command"
+        )
+
+
+@app.post("/commands/stop")
+async def stop_command(stop_request: StopCommandRequest):
+    if stop_request.process_id:
+        success = command_controller.stop_command(stop_request.process_id)
+        return {"stopped": success}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Missing process_id"
+        )
+
+
+@app.get("/commands/status")
+async def get_status(process_id: str):
+    if process_id:
+        status = command_controller.get_status(process_id)
+        if status is not None:
+            return status
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Invalid process_id"
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Missing process_id"
+        )
+
+
+# The CommandAPI class and setup_routes method are no longer needed
+# since FastAPI handles route setup directly with decorators
+
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="0.0.0.0", port=5000)

@@ -3,7 +3,7 @@ import threading
 import os
 
 app = Flask(__name__)
-log_file_path = "service.log"
+log_file_path = "../logs/services.log"
 
 # Ensure thread-safe file writing
 log_file_lock = threading.Lock()
