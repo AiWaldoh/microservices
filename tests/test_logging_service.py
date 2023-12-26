@@ -3,7 +3,7 @@
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 import pytest
-from top_secret.logging_service import (
+from top_secret.services.logging_service.main import (
     app,
 )  # Adjust the import according to your actual file structure
 from pydantic import BaseModel, Field
@@ -19,7 +19,7 @@ client = TestClient(app)
 @pytest.fixture
 def mock_log_storage():
     with patch(
-        "top_secret.logging_service.LogStorage.store", return_value=None
+        "top_secret.services.logging_service.main.LogStorage.store", return_value=None
     ) as mock_method:
         yield mock_method
 

@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  chatgpt_service:
+    build: ./top_secret/services/chatgpt_service
+    network_mode: host
+    env_file:
+      - .env
+
+  logging_service:
+    build: ./top_secret/services/logging_service
+    network_mode: host
+
+  command_executor_service:
+    build: ./top_secret/services/command_executor_service
+    network_mode: host
+    volumes:
+      - "/home/aiwaldoh/Development/python/projects/top-secret/working_directory:/app/data"
+
+  api_gateway:
+    build: ./top_secret/api_gateway
+    network_mode: host
+    env_file:
+      - .env

@@ -3,7 +3,11 @@
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 import pytest
-from top_secret.command_service import app, ProcessManager, CommandExecutor
+from top_secret.services.command_executor_service.main import (
+    app,
+    ProcessManager,
+    CommandExecutor,
+)
 
 client = TestClient(app)
 
@@ -21,7 +25,10 @@ def mock_command_executor():
     executor = MagicMock(spec=CommandExecutor)
     executor.is_running.return_value = False
     executor.get_output.return_value = "fake output"
-    with patch("top_secret.command_service.CommandExecutor", return_value=executor):
+    with patch(
+        "top_secret.services.command_executor_service.main",
+        return_value=executor,
+    ):
         yield executor
 
 

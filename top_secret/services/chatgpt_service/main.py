@@ -14,11 +14,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 # Set up logging
-logging.basicConfig(
-    filename="logs/openai_headers.log",
-    level=logging.DEBUG,
-    format="%(asctime)s %(message)s",
-)
 
 
 # Define the request model for FastAPI
@@ -120,8 +115,8 @@ async def completion(request_data: CompletionRequest, request: Request):
         )
 
 
-# Run the application using Uvicorn
-if __name__ == "__main__":
-    import uvicorn
+# # Run the application using Uvicorn
+# if __name__ == "__main__":
+#     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=5005)
+#     uvicorn.run(app, host="0.0.0.0", port=5005)

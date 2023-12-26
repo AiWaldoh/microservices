@@ -47,10 +47,13 @@ class CommandExecutor:
         self.timeout = timeout
         self.process = None  # pexpect.spawn instance.
         self.output = ""  # Store the output of the command.
+        self.working_dir = "/app/data"  # Set the working directory to /app/data
 
     def execute(self):
         """Execute the command with optional timeout using pexpect."""
-        self.process = pexpect.spawn(self.command, timeout=self.timeout)
+        self.process = pexpect.spawn(
+            self.command, timeout=self.timeout, cwd=self.working_dir
+        )
         self._capture_output()
 
     def _capture_output(self):
