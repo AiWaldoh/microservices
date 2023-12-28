@@ -37,3 +37,12 @@ repos:
         entry: pytest tests/ --cov=./ --cov-report=term --cov-fail-under=10  # Measure coverage for the entire project
         language: system
         pass_filenames: false
+
+  - repo: local
+    hooks:
+      - id: mkdocs-build
+        name: Build MkDocs Documentation
+        entry: mkdocs build
+        language: system
+        pass_filenames: false
+        stages: [commit]  # You can adjust this to run at different stages

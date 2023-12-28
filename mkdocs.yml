@@ -1,0 +1,14 @@
+site_name: My Project Documentation
+nav:
+  - Home: index.md
+  - ChatGPT Service: chatgpt_service.md
+  - Command Executor Service: command_executor_service.md
+  - Logging Service: logging_service.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          rendering:
+            show_source: true

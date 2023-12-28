@@ -23,6 +23,15 @@ load_dotenv()
 
 
 def send_log(message: str):
+    """
+    Sends a log message to a predefined logging service.
+
+    Args:
+        message (str): The message to be logged.
+
+    Returns:
+        The response from the logging service as JSON, or None if an error occurs.
+    """
     url = "http://localhost:8000/log"
     data = {"message": message}
     try:
@@ -35,15 +44,7 @@ def send_log(message: str):
 
 class CompletionRequest(BaseModel):
     """
-    Request model for generating text completions.
-
-    Attributes:
-    - prompt (str): The input text prompt for the GPT model.
-    - streaming (bool): If set to True, enables streaming of responses.
-    Defaults to False.
-    - model (str): Specifies the GPT model version to use. Defaults to 'gpt-3.5-turbo'.
-    - custom_url (str, optional): Custom URL for the OpenAI API, if different
-    from the default.
+    Pydantic model for handling completion requests.
     """
 
     prompt: str
@@ -56,7 +57,20 @@ send_log("ChatGPT service starting up")
 
 
 @app.post("/completion")
-async def completion(request_data: CompletionRequest, request: Request):
+async def generic_chatgpt_endpoint(request_data: CompletionRequest, request: Request):
+    """
+    Endpoint for processing generic ChatGPT completion requests.
+
+    Args:
+        request_data (CompletionRequest): The completion request data.
+        request (Request): The request object.
+
+    Returns:
+        A JSON response containing the completion result.
+
+    Raises:
+        HTTPException: If the API key is missing or an unexpected error occurs.
+    """
     send_log(f"Received completion request: {request_data}")
 
     api_key = os.getenv("OPENAI_API_KEY")
@@ -83,7 +97,16 @@ async def completion(request_data: CompletionRequest, request: Request):
 
 
 @app.websocket("/stream")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_chatgpt_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint for streaming ChatGPT responses.
+
+    Args:
+        websocket (WebSocket): The WebSocket connection object.
+
+    Raises:
+        WebSocketDisconnect: If the WebSocket connection is closed unexpectedly.
+    """
     wrapper = OpenAIWrapperStream()
     await websocket.accept()
     try:
@@ -104,23 +127,59 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 class Message(BaseModel):
+    """
+    Pydantic model for handling messages.
+    """
+
     role: str
     content: str
 
 
 class MessageHistory:
+    """
+    Class for storing and retrieving message history.
+    """
+
     def __init__(self):
+        """
+        Initializes a new instance of MessageHistory.
+        """
         self.messages = []
 
     def add_message(self, role: str, content: str):
+        """
+        Adds a message to the history.
+
+        Args:
+            role (str): The role of the message sender.
+            content (str): The message content.
+        """
         self.messages.append({"role": role, "content": content})
 
     def get_messages(self) -> List[dict]:
+        """
+        Retrieves all messages from the history.
+
+        Returns:
+            List[dict]: A list of message dictionaries.
+        """
         return self.messages
 
 
-@app.post("/json/")
-async def chat_endpoint(messages: List[Message]):
+@app.post("/json")
+async def json_chatgpt_endpoint(messages: List[Message]):
+    """
+    Endpoint for processing ChatGPT completion requests with JSON input.
+
+    Args:
+        messages (List[Message]): A list of message objects.
+
+    Returns:
+        A JSON response containing the completion result.
+
+    Raises:
+        HTTPException: If an unexpected error occurs.
+    """
     message_history = MessageHistory()
     for message in messages:
         message_history.add_message(message.role, message.content)
@@ -136,17 +195,37 @@ async def chat_endpoint(messages: List[Message]):
 
 
 class FunctionInput(BaseModel):
+    """
+    Pydantic model for handling function input.
+    """
+
     role: str
     content: str
 
 
 class FunctionData(BaseModel):
+    """
+    Pydantic model for handling function data.
+    """
+
     input_data: FunctionInput
     functions: list
 
 
 @app.post("/function")
-async def function_endpoint(data: FunctionData):
+async def function_chatgpt_endpoint(data: FunctionData):
+    """
+    Endpoint for processing ChatGPT completion requests with additional functions.
+
+    Args:
+        data (FunctionData): The function data for the request.
+
+    Returns:
+        A JSON response containing the completion result.
+
+    Raises:
+        HTTPException: If an unexpected error occurs.
+    """
     async_wrapper = OpenAIWrapperFunction()
 
     completion = await async_wrapper.create_completion(
@@ -156,10 +235,5 @@ async def function_endpoint(data: FunctionData):
     )
 
     completion_json = async_wrapper.model_dump_json(completion)
-
-    # You can handle the result type (command or question) elsewhere based on the
-    # completion result.
-    # For example, you can use the completion_json to determine the result type and
-    # take appropriate actions.
 
     return json.loads(completion_json)

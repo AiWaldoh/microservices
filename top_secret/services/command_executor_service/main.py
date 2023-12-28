@@ -8,17 +8,44 @@ app = FastAPI()
 
 
 class SSHCredentials(BaseModel):
+    """
+    Pydantic model for SSH credentials.
+    """
+
     hostname: str
     username: str
     key_filename: str
 
 
 class SSHCommand(BaseModel):
+    """
+    Pydantic model for an SSH command.
+    """
+
     command: str
 
 
 class SSHClient:
+    """
+    A client for managing SSH connections and executing commands over SSH.
+
+    Attributes:
+        hostname (str): The hostname of the SSH server.
+        username (str): The username for the SSH connection.
+        key_filename (str): The path to the SSH private key file.
+        client (paramiko.SSHClient): The Paramiko SSH client.
+        shell (paramiko.Channel): The SSH shell for executing commands.
+    """
+
     def __init__(self, hostname, username, key_filename):
+        """
+        Initializes the SSHClient instance with given credentials.
+
+        Args:
+            hostname (str): The hostname of the SSH server.
+            username (str): The username for the SSH connection.
+            key_filename (str): The path to the SSH private key file.
+        """
         self.hostname = hostname
         self.username = username
         self.key_filename = key_filename
@@ -26,6 +53,12 @@ class SSHClient:
         self.shell = None
 
     def connect(self):
+        """
+        Establishes an SSH connection and initializes the shell.
+
+        Raises:
+            Exception: If the connection fails.
+        """
         try:
             self.client = paramiko.SSHClient()
             self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -39,6 +72,9 @@ class SSHClient:
             sys.exit(1)
 
     def _discard_initial_prompt(self):
+        """
+        Discards the initial prompt text from the SSH shell.
+        """
         output = ""
         while not self.shell.recv_ready():
             time.sleep(0.1)
@@ -47,6 +83,18 @@ class SSHClient:
             output += data.decode("utf-8")
 
     def execute_command(self, command):
+        """
+        Executes a command on the SSH server.
+
+        Args:
+            command (str): The command to execute.
+
+        Returns:
+            str: The output from the command execution.
+
+        Raises:
+            RuntimeError: If the connection is not established.
+        """
         if self.shell:
             output = ""
             self.shell.send(command + "\n")
@@ -60,6 +108,9 @@ class SSHClient:
             print("Connection not established.")
 
     def close(self):
+        """
+        Closes the SSH connection.
+        """
         if self.client:
             self.client.close()
 
@@ -69,6 +120,18 @@ ssh_client = None
 
 @app.post("/connect")
 async def connect(credentials: SSHCredentials):
+    """
+    FastAPI endpoint to establish an SSH connection.
+
+    Args:
+        credentials (SSHCredentials): The SSH credentials.
+
+    Returns:
+        dict: A status message indicating connection success.
+
+    Raises:
+        HTTPException: If an SSH connection is already established.
+    """
     global ssh_client
     if ssh_client is None:
         ssh_client = SSHClient(
@@ -84,6 +147,18 @@ async def connect(credentials: SSHCredentials):
 
 @app.post("/execute-command")
 async def execute_command(command: SSHCommand):
+    """
+    FastAPI endpoint to execute a command over an established SSH connection.
+
+    Args:
+        command (SSHCommand): The command to execute.
+
+    Returns:
+        dict: The output from the command execution.
+
+    Raises:
+        HTTPException: If no SSH connection is established.
+    """
     global ssh_client
     if ssh_client is not None:
         output = ssh_client.execute_command(command.command)
