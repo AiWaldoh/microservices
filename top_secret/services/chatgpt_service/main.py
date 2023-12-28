@@ -2,10 +2,18 @@ import os
 from typing import List
 import httpx
 from fastapi import FastAPI, HTTPException, Request, status, WebSocket
-from libraries.openai_wrapper import OpenAIWrapper
-from libraries.openai_wrapper_stream import OpenAIWrapperStream
-from libraries.openai_wrapper_json import OpenAIWrapperJson
-from libraries.openai_wrapper_function import OpenAIWrapperFunction
+from libraries.openai_wrapper_simple import (
+    OpenAIWrapper,
+)
+from libraries.openai_wrapper_stream import (
+    OpenAIWrapperStream,
+)
+from libraries.openai_wrapper_json import (
+    OpenAIWrapperJson,
+)
+from libraries.openai_wrapper_function import (
+    OpenAIWrapperFunction,
+)
 
 from pydantic import BaseModel
 from dotenv import load_dotenv
