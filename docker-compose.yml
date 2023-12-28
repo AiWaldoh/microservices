@@ -18,9 +18,13 @@ services:
     network_mode: host
     volumes:
       - "/home/aiwaldoh/Development/python/projects/top-secret/working_directory:/app/data"
+      - ssh-keys:/root/.ssh # Mount the SSH keys volume to /root/.ssh
 
   api_gateway:
     build: ./top_secret/api_gateway
     network_mode: host
     env_file:
       - .env
+
+volumes:
+  ssh-keys: # Define the volume for SSH keys
