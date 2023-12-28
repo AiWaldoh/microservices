@@ -26,5 +26,24 @@ services:
     env_file:
       - .env
 
+  texttospeech_service:
+    build: ./top_secret/services/texttospeech_service
+    network_mode: host
+    depends_on:
+      - tts_service
+    # Add any other configuration needed for this service
+
+  tts_service:
+    image: ghcr.io/coqui-ai/tts
+    ports:
+      - "5002:5002"
+    entrypoint: python3 TTS/server/server.py
+    command: --model_name tts_models/en/vctk/vits --use_cuda true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [ "gpu" ]
+
 volumes:
   ssh-keys: # Define the volume for SSH keys
