@@ -1,7 +1,8 @@
 junk/
 working_directory/
+out/
 
-
+.ruff_cache
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
