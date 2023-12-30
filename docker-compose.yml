@@ -7,6 +7,10 @@ services:
     env_file:
       - .env
 
+  webpage_summarizer_service:
+    build: ./top_secret/services/webpage_summarizer_service
+    network_mode: host
+
   logging_service:
     build: ./top_secret/services/logging_service
     network_mode: host

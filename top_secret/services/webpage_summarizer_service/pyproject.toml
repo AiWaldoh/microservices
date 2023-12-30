@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "webpage-summarizer"
+version = "0.1.0"
+description = ""
+authors = ["waldoh <waldoh@waldohlinux.lan>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+scrapy = "^2.11.0"
+scrapy-playwright = "^0.0.33"
+newspaper3k = "^0.2.8"
+beautifulsoup4 = "^4.12.2"
+summa = "^1.2.0"
+uvicorn = "^0.25.0"
+fastapi = "^0.108.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
