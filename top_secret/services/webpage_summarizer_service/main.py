@@ -5,9 +5,9 @@ from scrapy.utils.project import get_project_settings
 from fastapi import FastAPI
 from pydantic import BaseModel
 from bs4 import BeautifulSoup
-from newspaper import Article, fulltext
+from newspaper import Article
 import nltk
-from summa import summarizer
+import json
 
 nltk.download("punkt")  # Required for NLP tasks in newspaper3k
 
@@ -103,16 +103,44 @@ class ScrapySpider(scrapy.Spider):
         article.set_html(parsed_results)
         article.parse()
         article.nlp()  # Perform NLP tasks like summarization
-        full_text = fulltext(parsed_results)
+        full_text = article.text
+
         # Create an item with the extracted data
-        summary = summarizer.summarize(full_text, ratio=0.5)
+        print("summarizing...")
+        print("full_text: ", full_text)
+        post_data = {
+            "prompt": "Summarize This:" + str(full_text),
+            "model": "gpt-3.5-turbo",
+            "custom_url": "Optional custom URL here",
+        }
+
+        yield scrapy.Request(
+            "http://localhost:8001/completion",
+            method="POST",
+            body=json.dumps(post_data),
+            headers={"Content-Type": "application/json"},
+            callback=self.parse_summary,
+            meta={"full_text": full_text},
+        )
+
+    def parse_summary(self, response):
+        full_text = response.meta["full_text"]
+        summary = "Error: Unable to get summary"
+        try:
+            # Use response.json() to parse the JSON response directly
+            data = response.json()
+            summary = data.get("completion", "")
+        except ValueError as e:
+            # Handle the case where the response is not valid JSON
+            self.logger.error(f"Failed to parse JSON: {e}")
+
         item = {
             "full_text": full_text,
             "summary": summary,
         }
 
         self.crawled_data.append(item)  # Append the scraped data to crawled_data
-        yield
+        yield item  # Yield the item to be processed by Scrapy's item pipeline
 
 
 app = FastAPI()
@@ -173,6 +201,3 @@ async def scrape_url(request: ScrapeRequest):
     results = results_queue.get() if not results_queue.empty() else None
 
     return {"message": "Scraping completed", "data": results}
-
-
-# Run the app with: uvicorn your_script_name:app --reload
