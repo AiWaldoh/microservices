@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "text-summarizer-service"
+version = "0.1.0"
+description = ""
+authors = ["waldoh <waldoh@waldohlinux.lan>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+transformers = "^4.36.2"
+optimum = "^1.16.1"
+auto-gptq = "^0.6.0"
+fastapi = "^0.108.0"
+uvicorn = "^0.25.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
