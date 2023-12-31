@@ -11,6 +11,19 @@ services:
     build: ./top_secret/services/webpage_scraper_service
     network_mode: host
 
+  function_calling_service:
+    build: ./top_secret/services/function_calling_service
+    network_mode: host
+    volumes:
+      - /media/aiwaldoh/LLM/models:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+
   text_summarizer_service:
     build: ./top_secret/services/text_summarizer_service
     network_mode: host

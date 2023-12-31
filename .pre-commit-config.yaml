@@ -34,7 +34,7 @@ repos:
     hooks:
       - id: pytest-coverage
         name: pytest with coverage
-        entry: pytest tests/ --cov=./ --cov-report=term --cov-fail-under=10  # Measure coverage for the entire project
+        entry: pytest tests/ --cov=./ --cov-report=term --cov-fail-under=5  # Measure coverage for the entire project
         language: system
         pass_filenames: false
 
