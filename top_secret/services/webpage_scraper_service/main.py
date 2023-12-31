@@ -116,6 +116,9 @@ class ScrapySpider(scrapy.Spider):
         # }
 
         yield {"result": full_text}
+        self.crawled_data.append(
+            {"result": full_text}
+        )  # Append the result to crawled_data
         # scrapy.Request(
         #     "http://localhost:8001/completion",
         #     method="POST",

@@ -26,6 +26,7 @@ class TextGenerator:
         top_k=40,
         pipeline_type="text-generation",
     ):
+        prompt = "Summarize the following: " + prompt
         print("Generating text...")
         print(f"Prompt: {prompt}")
         print(f"System message: {system_message}")
